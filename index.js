@@ -84,7 +84,8 @@ const setTodayNotifications = (lessons, chatID) => {
         const [lessonHour, lessonMinute] = el.startLessonTime.split(':')
         notifications.push(schedule.scheduleJob({
             hour: lessonHour,
-            minute: lessonMinute
+            minute: lessonMinute,
+            tz: 'Etc/GMT-3'
         }, notification(chatID, el)))
     })
     console.log(logger(`Notifications for today were set (${chatID}, ${lessons.length} lessons)`, 'LOG'))
@@ -112,9 +113,11 @@ const todaysCycle = async () => {
 todaysCycle()
 
 const autoSchedule = schedule.scheduleJob({
-    hour: 4
+    hour: 4,
+    tz: 'Etc/GMT-3'
 }, todaysCycle)
 
 const cleanTodaysNotifications = schedule.scheduleJob({
-    hour: 3
+    hour: 3,
+    tz: 'Etc/GMT-3'
 }, cleanNotifications)
