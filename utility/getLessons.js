@@ -19,20 +19,6 @@ const getLessons = async (group) => {
             lessonType: el.lessonType,
         })
     })
-    lessons.push({
-        studentGroup: 'TestGroup',
-        numSubgroup: 'Foo',
-        startLessonTime: '16:55',
-        subject: 'Bar',
-        lessonType: 'Baz',
-    })
-    lessons.push({
-        studentGroup: 'TestGroup2',
-        numSubgroup: 'Baz',
-        startLessonTime: '16:58',
-        subject: 'Foo',
-        lessonType: 'Bar',
-    })
     return lessons
 }
 
