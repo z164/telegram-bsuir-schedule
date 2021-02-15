@@ -114,10 +114,12 @@ todaysCycle()
 
 const autoSchedule = schedule.scheduleJob({
     hour: 4,
+    minute: 0,
     tz: 'Etc/GMT-3'
 }, todaysCycle)
 
 const cleanTodaysNotifications = schedule.scheduleJob({
     hour: 3,
+    minute: 0,
     tz: 'Etc/GMT-3'
 }, cleanNotifications)
