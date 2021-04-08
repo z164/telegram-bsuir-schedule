@@ -14,7 +14,13 @@ import init from './controllers/init.js'
 import toggle from './controllers/toggle.js'
 import list from './controllers/list.js'
 
+import filterToggle from './controllers/filter-toggle.js'
+import filterModeToggle from './controllers/filter-mode-toggle.js'
+import filterAdd from './controllers/filter-add.js'
+import filterList from './controllers/filter-list.js'
+
 import getLessons from './utility/getLessons.js'
+import filterRemove from './controllers/filter-remove.js'
 
 dotenv.config()
 
@@ -40,6 +46,13 @@ const bot = new Telegraf(process.env.TOKEN, {
 bot.hears(/^\/init \d{6}$/gm, ctx => init(ctx))
 bot.hears(/^\/toggle \d{6}$/gm, ctx => toggle(ctx))
 bot.hears(/^\/list \d{6}$/gm, ctx => list(ctx))
+bot.hears(/^\/filter-toggle \d{6}$/gm, ctx => filterToggle(ctx))
+bot.hears(/^\/filter-mode-toggle \d{6}$/gm, ctx => filterModeToggle(ctx))
+bot.hears(/^\/filter-add \d{6} .+$/gm, ctx => filterAdd(ctx))
+bot.hears(/^\/filter-list \d{6}$/gm, ctx => filterList(ctx))
+bot.hears(/^\/filter-remove \d{6} .+$/gm, ctx => filterRemove(ctx))
+
+
 
 // bot.use(function(ctx, next){
 // 	if( ctx.chat.id > 0 ) return next();
@@ -57,12 +70,17 @@ bot.hears(/^\/list \d{6}$/gm, ctx => list(ctx))
 bot.launch()
 
 const notifications = []
+const ids = []
 
 const notification = (chatID, lesson) => {
     return async () => {
         try {
-            await bot.telegram.sendMessage(chatID, `*\\! ATTENTION \\!*\nГруппа: ${lesson.studentGroup}\nПодгруппа: ${lesson.numSubgroup}\nНачало: ${lesson.startLessonTime}\nПредмет: ${lesson.subject}\nТип: ${lesson.lessonType}`, {
+            const message = await bot.telegram.sendMessage(chatID, `*\\! ATTENTION \\!*\nГруппа: ${lesson.studentGroup}\nПодгруппа: ${lesson.numSubgroup}\nНачало: ${lesson.startLessonTime}\nПредмет: ${lesson.subject}\nТип: ${lesson.lessonType}`, {
                 parse_mode: 'MarkdownV2'
+            })
+            ids.push({
+                id: message.message_id,
+                chat: message.chat.id
             })
         } catch {
             console.log(logger(`Seems like ${chatID} is not reachable for bot`, 'ERROR'))
@@ -76,19 +94,34 @@ const cleanNotifications = () => {
     console.log(logger(`Notifications amount before cleaning ${notifications.length}`, 'LOG'))
     notifications.forEach(el => el.cancel())
     notifications.splice(0, notifications.length)
+    ids.forEach(id => {
+        bot.telegram.deleteMessage(id.chat, id.id)
+    })
+    ids = []
     console.log(logger(`Notifications amount after cleaning ${notifications.length}`, 'LOG'))
 }
 
-const setTodayNotifications = (lessons, chatID) => {
-    lessons.forEach(el => {
-        const [lessonHour, lessonMinute] = el.startLessonTime.split(':')
-        notifications.push(schedule.scheduleJob({
-            hour: lessonHour,
-            minute: lessonMinute,
-            tz: 'Etc/GMT-3'
-        }, notification(chatID, el)))
+const setTodayNotifications = (lessons, chat) => {
+    lessons.forEach(lesson => {
+        const [lessonHour, lessonMinute] = lesson.startLessonTime.split(':')
+        if (!chat.filter) {
+            notifications.push(schedule.scheduleJob({
+                hour: lessonHour,
+                minute: lessonMinute,
+                tz: 'Etc/GMT-3'
+            }, notification(chat.chatID, lesson)))
+        } else {
+            if (chat.filterMode === 'includes' ? chat.filters.includes(lesson.subject.toLowerCase()) : !chat.filters.includes(lesson.subject.toLowerCase())) {
+                notifications.push(schedule.scheduleJob({
+                    hour: lessonHour,
+                    minute: lessonMinute,
+                    tz: 'Etc/GMT-3'
+                }, notification(chat.chatID, lesson)))
+            }
+        }
     })
-    console.log(logger(`Notifications for today were set (${chatID}, ${lessons.length} lessons)`, 'LOG'))
+    console.log(logger(`Notifications for today were set (${chat.chatID}, ${lessons.length} lessons)`, 'LOG'))
+
 }
 
 const todaysCycle = async () => {
@@ -102,8 +135,7 @@ const todaysCycle = async () => {
                 console.log(logger('No lessons for today'), 'WARNING')
                 return
             }
-            console.log(lessons)
-            setTodayNotifications(lessons, chat.chatID)
+            setTodayNotifications(lessons, chat)
         } else {
             console.log(logger(`Chat with id ${chat.chatID} and group number ${chat.groupNumber} disabled bot's features`, 'WARNING'))
         }

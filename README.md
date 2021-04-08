@@ -7,9 +7,14 @@ To fix this issue this bot was created.
 
 #### How to use? 
  You can add it to your group chat / use your chat with bot and it will notify you every time your lesson starts.  
-`/init {6 digit Group Number}` will initiate notifications in current chat for mentioned group (multiple groups are supported)  
-`/toggle {6 digit Group Number}` will disable / enable notifications  
-`/list {6 digit Group Number}` will list schedule for today
+`/init {6 digit Group Number}` - initiate notifications in current chat for mentioned group (multiple groups are supported)  
+`/toggle {6 digit Group Number}` - disable / enable notifications  
+`/list {6 digit Group Number}` - list schedule for today
+`/filter-toggle {6 digit Group Number}` - disable / enable filter mode for group
+`/filter-mode-toggle {6 digit Group Number}` - switch mode from white list to black list (inclusive / exclusive)
+`/filter-add {6 digit Group Number} {subjects separated by space}` - add subject to filters
+`/filter-remove {6 digit Group Number} {subjects separated by space}` - remove subject from filters
+
 
 <p align="center">
   <img src="https://i.imgur.com/4IXFWj0.png" />

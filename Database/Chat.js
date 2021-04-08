@@ -9,6 +9,15 @@ const chatSchema = new mongoose.Schema({
     },
     enabled: {
         type: Boolean,
+    },
+    filter: {
+        type: Boolean,
+    },
+    filterMode: {
+        type: String,
+    },
+    filters: {
+        type: [String]
     }
 });
 
